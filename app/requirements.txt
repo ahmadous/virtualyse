@@ -1,0 +1,8 @@
+torch
+torchvision
+pillow
+fastapi
+uvicorn
+mysql-connector-python
+requests
+python-multipart
