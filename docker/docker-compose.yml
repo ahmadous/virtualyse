@@ -2,34 +2,39 @@ version: '3.8'
 
 services:
   api:
+    image: docker-api:latest
     build:
       context: ../app
       dockerfile: Dockerfile
+    volumes:
+      - app_uploads:/app/uploads
     ports:
       - "8000:8000"
-    volumes:
-      - ../app/uploads:/app/uploads
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - app_network
 
   db:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: grafana
-      MYSQL_DATABASE: grafana
+      MYSQL_DATABASE: image_db
       MYSQL_USER: grafana
       MYSQL_PASSWORD: grafana
     volumes:
       - db_data:/var/lib/mysql
-      - ../uploads:/docker-entrypoint-initdb.d
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   frontend:
+    image: docker-frontend:latest
     build:
       context: ../frontend
       dockerfile: Dockerfile
@@ -37,6 +42,8 @@ services:
       - "8080:80"
     depends_on:
       - api
+    networks:
+      - app_network
 
   prometheus:
     image: prom/prometheus
@@ -44,13 +51,15 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app_network
 
   grafana:
     image: grafana/grafana
     environment:
       - GF_DATABASE_TYPE=mysql
       - GF_DATABASE_HOST=db:3306
-      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_NAME=image_db
       - GF_DATABASE_USER=grafana
       - GF_DATABASE_PASSWORD=grafana
     ports:
@@ -58,6 +67,12 @@ services:
     depends_on:
       - db
       - prometheus
+    networks:
+      - app_network
 
 volumes:
-  db_data:
+  app_uploads: # Volume pour les fichiers téléchargés par l'API
+  db_data: # Volume pour les données MySQL
+
+networks:
+  app_network: # Réseau partagé entre les services

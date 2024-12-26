@@ -6,3 +6,4 @@ uvicorn
 mysql-connector-python
 requests
 python-multipart
+click

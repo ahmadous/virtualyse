@@ -8,3 +8,7 @@ CREATE TABLE IF NOT EXISTS predictions (
     prediction VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE USER IF NOT EXISTS 'grafana'@'%' IDENTIFIED BY 'grafana';
+GRANT ALL PRIVILEGES ON image_db.* TO 'grafana'@'%';
+FLUSH PRIVILEGES;
